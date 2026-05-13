@@ -299,10 +299,22 @@ function getPlayer2State() {
 function applyRemoteGameState(state) {
     if (!state || !state.player) return;
     
-    // 确定要更新的远程玩家
-    // 如果我是房主，则对方是 guest，更新 player2
-    // 如果我是访客，则对方是 host，更新 player1
-    const targetPlayer = isHost ? player2 : player1;
+    // 根据发送者确定要更新的玩家
+    // 房主发送的是 player1 的状态，访客发送的是 player2 的状态
+    let targetPlayer = null;
+    
+    if (state.sender === 'host') {
+        // 房主发送的状态 -> 更新 player1（如果我是访客）
+        if (!isHost) {
+            targetPlayer = player1;
+        }
+    } else if (state.sender === 'guest') {
+        // 访客发送的状态 -> 更新 player2（如果我是房主）
+        if (isHost) {
+            targetPlayer = player2;
+        }
+    }
+    
     if (!targetPlayer) return;
     
     const remote = state.player;
