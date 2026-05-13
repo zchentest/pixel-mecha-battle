@@ -481,8 +481,6 @@
 
         .controls {
             margin-top: 15px;
-            display: flex;
-            gap: 30px;
             background: rgba(0, 0, 0, 0.6);
             padding: 15px 25px;
             border-radius: 10px;
@@ -494,7 +492,7 @@
         }
 
         .control-section h3 {
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             font-size: 14px;
         }
 
@@ -506,11 +504,24 @@
             color: #ff4757;
         }
 
-        .key-row {
+        .control-section.my-control h3::after {
+            content: " ← 你控制的";
+            color: #ffd700;
+            font-size: 12px;
+        }
+
+        /* 横排布局 */
+        .key-grid {
             display: flex;
-            gap: 5px;
+            flex-wrap: wrap;
             justify-content: center;
-            margin: 4px 0;
+            gap: 8px 15px;
+        }
+
+        .key-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
         .key {
@@ -528,7 +539,6 @@
         .action-label {
             font-size: 10px;
             color: #888;
-            margin-left: 5px;
         }
 
         .game-over {
@@ -767,51 +777,25 @@
     </div>
 
     <div class="controls" id="controls">
-        <div class="control-section p1">
+        <div class="control-section p1" id="p1ControlSection">
             <h3>🔷 玩家1 控制</h3>
-            <div class="key-row">
-                <span class="key">A</span><span class="key">D</span>
-                <span class="action-label">移动</span>
-            </div>
-            <div class="key-row">
-                <span class="key">W</span>
-                <span class="action-label">跳跃</span>
-            </div>
-            <div class="key-row">
-                <span class="key">G</span>
-                <span class="action-label">拳击</span>
-            </div>
-            <div class="key-row">
-                <span class="key">F</span>
-                <span class="action-label">腿踢</span>
-            </div>
-            <div class="key-row">
-                <span class="key">H</span>
-                <span class="action-label">防御</span>
+            <div class="key-grid">
+                <div class="key-item"><span class="key">A</span><span class="key">D</span><span class="action-label">移动</span></div>
+                <div class="key-item"><span class="key">W</span><span class="action-label">跳跃</span></div>
+                <div class="key-item"><span class="key">G</span><span class="action-label">拳击</span></div>
+                <div class="key-item"><span class="key">F</span><span class="action-label">腿踢</span></div>
+                <div class="key-item"><span class="key">H</span><span class="action-label">防御</span></div>
             </div>
         </div>
         
-        <div class="control-section p2" id="p2Controls">
+        <div class="control-section p2" id="p2ControlSection">
             <h3>🔴 玩家2 控制</h3>
-            <div class="key-row">
-                <span class="key">←</span><span class="key">→</span>
-                <span class="action-label">移动</span>
-            </div>
-            <div class="key-row">
-                <span class="key">↑</span>
-                <span class="action-label">跳跃</span>
-            </div>
-            <div class="key-row">
-                <span class="key">.</span>
-                <span class="action-label">拳击</span>
-            </div>
-            <div class="key-row">
-                <span class="key">/</span>
-                <span class="action-label">腿踢</span>
-            </div>
-            <div class="key-row">
-                <span class="key">L</span>
-                <span class="action-label">防御</span>
+            <div class="key-grid">
+                <div class="key-item"><span class="key">←</span><span class="key">→</span><span class="action-label">移动</span></div>
+                <div class="key-item"><span class="key">↑</span><span class="action-label">跳跃</span></div>
+                <div class="key-item"><span class="key">.</span><span class="action-label">拳击</span></div>
+                <div class="key-item"><span class="key">/</span><span class="action-label">腿踢</span></div>
+                <div class="key-item"><span class="key">L</span><span class="action-label">防御</span></div>
             </div>
         </div>
     </div>

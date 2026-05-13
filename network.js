@@ -83,7 +83,16 @@ function joinRoom() {
         return;
     }
     
-    showConnectionStatus('正在加入房间...', 'connecting');
+    showConnectionStatus('正在连接服务器...', 'connecting');
+    document.getElementById('waitingText').textContent = '正在连接服务器...';
+    document.getElementById('waitingOverlay').classList.add('show');
+    
+    // 设置超时
+    const timeoutId = setTimeout(() => {
+        showConnectionStatus('连接超时，请检查房间号是否正确', 'error');
+        document.getElementById('waitingOverlay').classList.remove('show');
+        resetConnection();
+    }, 15000);
     
     try {
         // 创建 Peer 实例（不指定ID，由服务器分配）
@@ -93,23 +102,33 @@ function joinRoom() {
         
         peer.on('open', (id) => {
             console.log('已连接服务器，我的ID:', id);
+            showConnectionStatus('正在加入房间...', 'connecting');
+            document.getElementById('waitingText').textContent = '正在加入房间...';
             
             // 连接到房主
             connection = peer.connect(roomId, {
                 reliable: true
             });
             
+            // 连接成功时清除超时
+            connection.on('open', () => {
+                clearTimeout(timeoutId);
+            });
+            
             setupConnection(connection);
         });
         
         peer.on('error', (err) => {
+            clearTimeout(timeoutId);
             console.error('PeerJS 错误:', err);
             handlePeerError(err);
         });
         
     } catch (error) {
+        clearTimeout(timeoutId);
         console.error('加入房间失败:', error);
         showConnectionStatus('加入失败: ' + error.message, 'error');
+        document.getElementById('waitingOverlay').classList.remove('show');
     }
 }
 
@@ -220,14 +239,29 @@ function stopPingTest() {
 }
 
 // ==================== 游戏状态同步 ====================
+let lastSyncTime = 0;
+
 function syncGameState() {
     if (connectionState !== 'connected') return;
     
+    // 节流：每33ms最多同步一次
+    const now = Date.now();
+    if (now - lastSyncTime < 33) return;
+    lastSyncTime = now;
+    
+    // 本地玩家的状态（自己的血量不会被远程覆盖）
     const state = isHost ? getPlayer1State() : getPlayer2State();
-    sendNetworkMessage({
-        type: 'gameState',
-        data: { player: state, timestamp: Date.now() }
-    });
+    
+    if (connection && connection.open) {
+        connection.send({
+            type: 'gameState',
+            data: { 
+                player: state, 
+                timestamp: now,
+                sender: isHost ? 'host' : 'guest'
+            }
+        });
+    }
 }
 
 function getPlayer1State() {
@@ -235,7 +269,8 @@ function getPlayer1State() {
     return {
         x: player1.x, y: player1.y,
         vx: player1.vx, vy: player1.vy,
-        health: player1.health, energy: player1.energy,
+        health: player1.health, 
+        energy: player1.energy,
         facing: player1.facing,
         isAttacking: player1.isAttacking,
         currentAttack: player1.currentAttack,
@@ -250,7 +285,8 @@ function getPlayer2State() {
     return {
         x: player2.x, y: player2.y,
         vx: player2.vx, vy: player2.vy,
-        health: player2.health, energy: player2.energy,
+        health: player2.health, 
+        energy: player2.energy,
         facing: player2.facing,
         isAttacking: player2.isAttacking,
         currentAttack: player2.currentAttack,
@@ -263,28 +299,30 @@ function getPlayer2State() {
 function applyRemoteGameState(state) {
     if (!state || !state.player) return;
     
+    // 确定要更新的远程玩家
+    // 如果我是房主，则对方是 guest，更新 player2
+    // 如果我是访客，则对方是 host，更新 player1
     const targetPlayer = isHost ? player2 : player1;
     if (!targetPlayer) return;
     
     const remote = state.player;
-    // 位置使用插值让移动更平滑
-    targetPlayer.x = lerp(targetPlayer.x, remote.x, 0.3);
-    targetPlayer.y = lerp(targetPlayer.y, remote.y, 0.3);
+    
+    // 位置平滑插值
+    targetPlayer.x = targetPlayer.x + (remote.x - targetPlayer.x) * 0.3;
+    targetPlayer.y = targetPlayer.y + (remote.y - targetPlayer.y) * 0.3;
     targetPlayer.vx = remote.vx;
     targetPlayer.vy = remote.vy;
-    // 血量和能量直接使用远程值（不做插值，避免自动回复问题）
+    
+    // 关键：直接使用远程的血量和能量值（不做任何插值）
     targetPlayer.health = remote.health;
     targetPlayer.energy = remote.energy;
+    
     targetPlayer.facing = remote.facing;
     targetPlayer.isAttacking = remote.isAttacking;
     targetPlayer.currentAttack = remote.currentAttack;
     targetPlayer.attackFrame = remote.attackFrame;
     targetPlayer.isBlocking = remote.isBlocking;
     targetPlayer.isGrounded = remote.isGrounded;
-}
-
-function lerp(start, end, t) {
-    return start + (end - start) * t;
 }
 
 // ==================== 连接关闭 ====================
@@ -393,7 +431,19 @@ function startOnlineGame() {
     
     // 联机模式：双方都显示控制说明
     document.getElementById('controls').style.display = 'block';
-    document.getElementById('p2Controls').style.display = 'block';
+    document.getElementById('p2ControlSection').style.display = 'block';
+    
+    // 标记当前控制的玩家
+    const p1Section = document.getElementById('p1ControlSection');
+    const p2Section = document.getElementById('p2ControlSection');
+    p1Section.classList.remove('my-control');
+    p2Section.classList.remove('my-control');
+    
+    if (isHost) {
+        p1Section.classList.add('my-control');
+    } else {
+        p2Section.classList.add('my-control');
+    }
     
     document.getElementById('networkStatus').classList.add('show');
     startPingTest();
