@@ -1,154 +1,530 @@
-# ⚔️ 像素机甲对决 - Pixel Mecha Battle
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>像素机甲对决 v3.0 - Pixel Mecha Battle</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-[![Made with Trae](https://img.shields.io/badge/Made%20with-Trae-6C5CE7?style=flat-square)](https://trae.ai)
-[![License](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
-[![HTML5](https://img.shields.io/badge/HTML5-Canvas-orange.svg?style=flat-square)](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API)
+        body {
+            background: linear-gradient(135deg, #0a0a15 0%, #1a1a2e 50%, #0f0f20 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Courier New', monospace;
+            color: #fff;
+            padding: 15px;
+            overflow-x: hidden;
+        }
 
-> 🎮 一个基于 HTML5 Canvas 的双人像素风机甲格斗游戏，支持挑战者模式和真人对决模式。
+        h1 {
+            font-size: 2.2em;
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, #00d9ff, #e94560, #ffd700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 4px;
+            text-shadow: none;
+        }
 
-![Game Preview](preview.png)
+        .subtitle {
+            color: #888;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+        }
 
-## ✨ 特性
+        .game-container {
+            position: relative;
+            border: 4px solid #333;
+            border-radius: 8px;
+            box-shadow: 
+                0 0 40px rgba(233, 69, 96, 0.3),
+                0 0 80px rgba(0, 217, 255, 0.2),
+                inset 0 0 60px rgba(0,0,0,0.8);
+            background: #000;
+        }
 
-- 🎯 **两种游戏模式**
-  - 🏆 **挑战者模式**：单人闯关，挑战3个AI敌人
-  - 👥 **真人对决**：双人在同一键盘对战
+        canvas {
+            display: block;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
 
-- 🤖 **智能AI系统**
-  - 自动追踪与攻击决策
-  - 格挡反应与跳跃躲避
-  - 三关难度递增
+        /* 模式选择界面 */
+        .mode-select {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+        }
 
-- 🎨 **独特角色设计**
-  - 4个不同外观的机甲角色
-  - 中文帅气名称
-  - 专属光环与特效
+        .mode-select h2 {
+            font-size: 1.8em;
+            margin-bottom: 30px;
+            color: #ffd700;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
 
-- ⚡ **丰富战斗系统**
-  - 拳击/腿踢/空中攻击
-  - 部位判定（头部伤害翻倍）
-  - 格挡防御机制
-  - 浮动伤害数字与屏幕震动
+        .mode-buttons {
+            display: flex;
+            gap: 30px;
+        }
 
-## 🚀 快速开始
+        .mode-btn {
+            background: linear-gradient(180deg, #2a2a4e, #1a1a2e);
+            border: 3px solid #444;
+            border-radius: 12px;
+            padding: 30px 40px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            min-width: 200px;
+        }
 
-### 🎮 在线试玩
+        .mode-btn:hover {
+            transform: translateY(-5px);
+            border-color: #e94560;
+            box-shadow: 0 10px 30px rgba(233, 69, 96, 0.4);
+        }
 
-**👉 [点击这里立即试玩](https://pixelmechabattle-2ouxr01ht.maozi.io/)**
+        .mode-btn .icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
 
-无需下载，直接在浏览器中即可体验！
+        .mode-btn .title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 8px;
+        }
 
-### 本地运行
+        .mode-btn .desc {
+            font-size: 0.85em;
+            color: #888;
+            line-height: 1.4;
+        }
 
-```bash
-# 克隆仓库
-git clone https://github.com/yourusername/pixel-mecha-battle.git
+        .mode-btn.challenger:hover {
+            border-color: #ffd700;
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.4);
+        }
 
-# 进入目录
-cd pixel-mecha-battle
+        /* 关卡信息 */
+        .stage-info {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            border: 3px solid #ffd700;
+            border-radius: 15px;
+            padding: 40px 60px;
+            text-align: center;
+            z-index: 150;
+            display: none;
+        }
 
-# 用浏览器打开游戏
-open index.html
-```
+        .stage-info h2 {
+            font-size: 2em;
+            color: #ffd700;
+            margin-bottom: 15px;
+        }
 
-## 🎮 操作说明
+        .stage-info .enemy-name {
+            font-size: 1.5em;
+            color: #ff4757;
+            margin-bottom: 10px;
+        }
 
-### 玩家1（苍穹战甲）
-| 按键 | 动作 |
-|------|------|
-| A / D | 左右移动 |
-| W | 跳跃 |
-| G | 拳击 |
-| F | 腿踢 |
-| H | 防御/格挡 |
+        .stage-info .enemy-stats {
+            color: #888;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+        }
 
-### 玩家2（真人对决模式）
-| 按键 | 动作 |
-|------|------|
-| ← / → | 左右移动 |
-| ↑ | 跳跃 |
-| . | 拳击 |
-| / | 腿踢 |
-| L | 防御/格挡 |
+        .stage-info .start-btn {
+            background: linear-gradient(180deg, #ffd700, #cc9900);
+            color: #000;
+            border: none;
+            padding: 12px 40px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+        }
 
-## 👾 角色介绍
+        .ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            pointer-events: none;
+        }
 
-| 角色 | 名称 | 特征 | 出现关卡 |
-|------|------|------|---------|
-| 🔵 | **苍穹战甲** | 标准体型，青色光芒 | 玩家1 |
-| 🔴 | **赤焰霸者** | 魁梧体型，双角，红色 | 第1关 |
-| 🟣 | **幽影裁决** | 纤细体型，紫色翅膀 | 第2关 |
-| 🟡 | **金甲战神** | 魁梧体型，王冠，金色 | 第3关 |
+        .player-ui {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 2px solid;
+        }
 
-## 🛠️ 技术栈
+        .player-ui.p1 {
+            border-color: #00d9ff;
+        }
 
-- **HTML5 Canvas** - 游戏渲染
-- **原生 JavaScript** - 游戏逻辑
-- **CSS3** - UI样式与动画
+        .player-ui.p2 {
+            border-color: #ff4757;
+        }
 
-## 📁 项目结构
+        .player-name {
+            font-size: 13px;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
 
-```
-pixel-mecha-battle/
-├── index.html          # 游戏主页面
-├── game.js             # 游戏核心逻辑
-├── README.md           # 项目说明
-└── LICENSE             # 许可证
-```
+        .player-ui.p1 .player-name {
+            color: #00d9ff;
+        }
 
-## 🎯 游戏机制
+        .player-ui.p2 .player-name {
+            color: #ff4757;
+            text-align: right;
+        }
 
-### 攻击系统
-- **拳击**：快速，伤害 8-14
-- **腿踢**：稍慢，伤害 12-20，距离更远
-- **空中攻击**：跳跃时可发动，伤害更高
+        .health-bar {
+            width: 180px;
+            height: 20px;
+            background: #1a1a1a;
+            border: 2px solid #444;
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+        }
 
-### 伤害判定
-- 击中身体：正常伤害
-- **击中头部**：伤害 × 2，显示"爆头"特效
+        .health-fill {
+            height: 100%;
+            transition: width 0.2s ease;
+            position: relative;
+        }
 
-### 能量系统
-- 攻击消耗能量
-- 格挡消耗能量但抵消伤害
-- 能量自动缓慢恢复
+        .health-fill.p1 {
+            background: linear-gradient(180deg, #00ffff, #0088cc);
+        }
 
-## 📝 开发说明
+        .health-fill.p2 {
+            background: linear-gradient(180deg, #ff6666, #cc0000);
+        }
 
-本项目使用 [Trae](https://trae.ai) AI IDE 开发完成。
+        .health-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50%;
+            background: linear-gradient(180deg, rgba(255,255,255,0.3), transparent);
+        }
 
-### 核心代码结构
+        .health-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 11px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px #000;
+            z-index: 10;
+        }
 
-```javascript
-// 机甲类
-class Mecha {
-  // 属性：位置、速度、血量、能量
-  // 方法：更新、绘制、攻击、受伤
-}
+        .energy-bar {
+            width: 140px;
+            height: 8px;
+            background: #1a1a1a;
+            border: 1px solid #ffd700;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
 
-// AI控制器
-class AIController {
-  // 追踪、攻击决策、防御反应
-}
+        .energy-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ffd700, #ff8c00);
+            transition: width 0.1s ease;
+        }
 
-// 粒子系统
-class Particle {
-  // 火花、烟雾、能量粒子特效
-}
-```
+        /* 关卡指示器 */
+        .stage-indicator {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 8px 20px;
+            border-radius: 20px;
+            border: 2px solid #ffd700;
+            font-size: 14px;
+            color: #ffd700;
+            pointer-events: none;
+        }
 
-## 🤝 贡献
+        .controls {
+            margin-top: 15px;
+            display: flex;
+            gap: 30px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 15px 25px;
+            border-radius: 10px;
+            border: 1px solid #333;
+        }
 
-欢迎提交 Issue 和 Pull Request！
+        .control-section {
+            text-align: center;
+        }
 
-## 📄 许可证
+        .control-section h3 {
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
 
-[MIT License](LICENSE)
+        .control-section.p1 h3 {
+            color: #00d9ff;
+        }
 
-## 🙏 致谢
+        .control-section.p2 h3 {
+            color: #ff4757;
+        }
 
-- 使用 [Trae](https://trae.ai) AI IDE 开发
-- 灵感来自经典格斗游戏
+        .key-row {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+            margin: 4px 0;
+        }
 
----
+        .key {
+            display: inline-block;
+            background: linear-gradient(180deg, #444, #222);
+            border: 1px solid #555;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 11px;
+            min-width: 28px;
+            text-align: center;
+            box-shadow: 0 2px 0 #111;
+        }
 
-⭐ 如果这个项目对你有帮助，请给个 Star 支持一下！
+        .action-label {
+            font-size: 10px;
+            color: #888;
+            margin-left: 5px;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            border: 4px solid #e94560;
+            padding: 40px 60px;
+            text-align: center;
+            border-radius: 12px;
+            display: none;
+            z-index: 100;
+            box-shadow: 0 0 50px rgba(233, 69, 96, 0.5);
+        }
+
+        .game-over h2 {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+            background: linear-gradient(90deg, #ffd700, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .restart-btn {
+            background: linear-gradient(180deg, #e94560, #cc1133);
+            color: #fff;
+            border: none;
+            padding: 12px 35px;
+            font-size: 1.1em;
+            cursor: pointer;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            transition: all 0.3s;
+            margin-top: 15px;
+            box-shadow: 0 4px 0 #880022;
+        }
+
+        .restart-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #880022;
+        }
+
+        .restart-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #880022;
+        }
+
+        .menu-btn {
+            background: linear-gradient(180deg, #444, #222);
+            color: #fff;
+            border: none;
+            padding: 10px 25px;
+            font-size: 1em;
+            cursor: pointer;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            margin-top: 10px;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>⚔️ 像素机甲对决 v3.0 ⚔️</h1>
+    <p class="subtitle">挑战者模式 · 真人对决 · 三关挑战</p>
+    
+    <div class="game-container">
+        <canvas id="gameCanvas" width="900" height="500"></canvas>
+        
+        <!-- 模式选择 -->
+        <div class="mode-select" id="modeSelect">
+            <h2>选择游戏模式</h2>
+            <div class="mode-buttons">
+                <div class="mode-btn challenger" onclick="selectMode('challenge')">
+                    <div class="icon">🏆</div>
+                    <div class="title">挑战者模式</div>
+                    <div class="desc">挑战3个AI敌人<br>每关难度递增<br>击败所有敌人获胜</div>
+                </div>
+                <div class="mode-btn" onclick="selectMode('pvp')">
+                    <div class="icon">👥</div>
+                    <div class="title">真人对决</div>
+                    <div class="desc">双人对战<br>与朋友一决高下<br>经典格斗体验</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 关卡信息 -->
+        <div class="stage-info" id="stageInfo">
+            <h2 id="stageTitle">第 1 关</h2>
+            <div class="enemy-name" id="enemyName">CRIMSON-01</div>
+            <div class="enemy-stats" id="enemyStats">攻击速度: 普通 | 攻击倾向: 保守</div>
+            <button class="start-btn" onclick="startStage()">开始战斗</button>
+        </div>
+
+        <!-- 关卡指示器 -->
+        <div class="stage-indicator" id="stageIndicator" style="display: none;">
+            第 <span id="currentStage">1</span> / 3 关
+        </div>
+        
+        <div class="ui-overlay">
+            <div class="player-ui p1">
+                <div class="player-name">🔷 BLUE-01 (P1)</div>
+                <div class="health-bar">
+                    <div class="health-fill p1" id="p1Health" style="width: 100%;"></div>
+                    <div class="health-text"><span id="p1HpText">100</span>/100</div>
+                </div>
+                <div class="energy-bar">
+                    <div class="energy-fill" id="p1Energy" style="width: 100%;"></div>
+                </div>
+            </div>
+            
+            <div class="player-ui p2">
+                <div class="player-name" id="p2Name">RED-02 (P2) 🔴</div>
+                <div class="health-bar">
+                    <div class="health-fill p2" id="p2Health" style="width: 100%;"></div>
+                    <div class="health-text"><span id="p2HpText">100</span>/100</div>
+                </div>
+                <div class="energy-bar">
+                    <div class="energy-fill" id="p2Energy" style="width: 100%;"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="game-over" id="gameOver">
+            <h2 id="winnerText">蓝方获胜!</h2>
+            <p style="font-size: 1em; color: #aaa;" id="gameOverDesc">激烈对战!</p>
+            <div>
+                <button class="restart-btn" onclick="restartGame()">🔄 重新开始</button>
+                <button class="menu-btn" onclick="backToMenu()">📋 返回菜单</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls" id="controls">
+        <div class="control-section p1">
+            <h3>🔷 玩家1 控制</h3>
+            <div class="key-row">
+                <span class="key">A</span><span class="key">D</span>
+                <span class="action-label">移动</span>
+            </div>
+            <div class="key-row">
+                <span class="key">W</span>
+                <span class="action-label">跳跃</span>
+            </div>
+            <div class="key-row">
+                <span class="key">G</span>
+                <span class="action-label">拳击</span>
+            </div>
+            <div class="key-row">
+                <span class="key">F</span>
+                <span class="action-label">腿踢</span>
+            </div>
+            <div class="key-row">
+                <span class="key">H</span>
+                <span class="action-label">防御</span>
+            </div>
+        </div>
+        
+        <div class="control-section p2" id="p2Controls">
+            <h3>🔴 玩家2 控制</h3>
+            <div class="key-row">
+                <span class="key">←</span><span class="key">→</span>
+                <span class="action-label">移动</span>
+            </div>
+            <div class="key-row">
+                <span class="key">↑</span>
+                <span class="action-label">跳跃</span>
+            </div>
+            <div class="key-row">
+                <span class="key">.</span>
+                <span class="action-label">拳击</span>
+            </div>
+            <div class="key-row">
+                <span class="key">/</span>
+                <span class="action-label">腿踢</span>
+            </div>
+            <div class="key-row">
+                <span class="key">L</span>
+                <span class="action-label">防御</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
