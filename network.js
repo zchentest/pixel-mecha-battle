@@ -182,13 +182,7 @@ function handleNetworkMessage(msg) {
         case 'playerName':
             remotePlayerName = msg.name;
             // 更新玩家名称
-            if (isHost) {
-                document.getElementById('p1Name').textContent = localPlayerName + ' (你)';
-                document.getElementById('p2Name').textContent = remotePlayerName + ' (对手)';
-            } else {
-                document.getElementById('p1Name').textContent = remotePlayerName + ' (对手)';
-                document.getElementById('p2Name').textContent = localPlayerName + ' (你)';
-            }
+            updatePlayerNames();
             break;
         case 'ping':
             sendNetworkMessage({ type: 'pong', time: msg.time });
@@ -275,10 +269,12 @@ function applyRemoteGameState(state) {
     if (!targetPlayer) return;
     
     const remote = state.player;
+    // 位置使用插值让移动更平滑
     targetPlayer.x = lerp(targetPlayer.x, remote.x, 0.3);
     targetPlayer.y = lerp(targetPlayer.y, remote.y, 0.3);
     targetPlayer.vx = remote.vx;
     targetPlayer.vy = remote.vy;
+    // 血量和能量直接使用远程值（不做插值，避免自动回复问题）
     targetPlayer.health = remote.health;
     targetPlayer.energy = remote.energy;
     targetPlayer.facing = remote.facing;
@@ -396,16 +392,32 @@ function startOnlineGame() {
     gameRunning = true;
     screenShake = { x: 0, y: 0, intensity: 0 };
     document.getElementById('gameOver').style.display = 'none';
+    
+    // 联机模式：双方都显示控制说明
     document.getElementById('controls').style.display = 'block';
-    document.getElementById('p2Controls').style.display = 'none';
+    document.getElementById('p2Controls').style.display = 'block';
     
     document.getElementById('networkStatus').classList.add('show');
     startPingTest();
+    
+    // 更新玩家名称显示（使用输入的昵称）
+    updatePlayerNames();
     
     updateUI();
     
     // 开始状态同步
     setInterval(syncGameState, 1000 / 30);
+}
+
+// ==================== 更新玩家名称 ====================
+function updatePlayerNames() {
+    if (isHost) {
+        document.getElementById('p1Name').textContent = localPlayerName + ' (你)';
+        document.getElementById('p2Name').textContent = remotePlayerName || '等待对手...';
+    } else {
+        document.getElementById('p1Name').textContent = remotePlayerName || '等待对手...';
+        document.getElementById('p2Name').textContent = localPlayerName + ' (你)';
+    }
 }
 
 // ==================== 清理 ====================

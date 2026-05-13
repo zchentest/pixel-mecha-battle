@@ -4,9 +4,7 @@
 [![License](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
 [![HTML5](https://img.shields.io/badge/HTML5-Canvas-orange.svg?style=flat-square)](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API)
 
-> 🎮 一个基于 HTML5 Canvas 的双人像素风机甲格斗游戏，支持挑战者模式和真人对决模式。
-
-![Game Preview](preview.png)
+> 🎮 一个基于 HTML5 Canvas 的双人像素风机甲格斗游戏，支持挑战者模式、真人对决和异地联机模式。
 
 ## ✨ 特性
 
