@@ -13,27 +13,20 @@ let connectionState = 'disconnected';
 let pingInterval = null;
 let networkLatency = 0;
 
-// ==================== PeerJS 初始化 ====================
-function initPeerJS() {
-    // 加载 PeerJS 库
-    if (typeof Peer === 'undefined') {
-        const script = document.createElement('script');
-        script.src = 'https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js';
-        script.onload = () => console.log('PeerJS loaded');
-        script.onerror = () => console.error('PeerJS load failed');
-        document.head.appendChild(script);
-    }
-}
-
 // ==================== 创建房间（主机） ====================
 function createRoom() {
+    if (typeof Peer === 'undefined') {
+        showConnectionStatus('网络库加载中，请稍后重试...', 'error');
+        return;
+    }
+    
     const nameInput = document.getElementById('hostName');
     localPlayerName = nameInput.value.trim() || '房主';
     
     // 生成房间ID（简单易记）
     const roomId = 'PMB-' + Math.random().toString(36).substr(2, 6).toUpperCase();
     
-    showConnectionStatus('正在创建房间...', 'connecting');
+    showConnectionStatus('正在连接服务器...', 'connecting');
     
     try {
         // 创建 Peer 实例，使用房间ID作为 peer ID
@@ -74,6 +67,11 @@ function createRoom() {
 
 // ==================== 加入房间（客户端） ====================
 function joinRoom() {
+    if (typeof Peer === 'undefined') {
+        showConnectionStatus('网络库加载中，请稍后重试...', 'error');
+        return;
+    }
+    
     const nameInput = document.getElementById('guestName');
     const codeInput = document.getElementById('joinCode');
     
@@ -424,6 +422,3 @@ function updatePlayerNames() {
 window.addEventListener('beforeunload', () => {
     resetConnection();
 });
-
-// ==================== 页面加载时初始化 ====================
-document.addEventListener('DOMContentLoaded', initPeerJS);
