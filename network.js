@@ -11,6 +11,7 @@ let remotePlayerName = '';
 let localPlayerName = '';
 let connectionState = 'disconnected';
 let pingInterval = null;
+let syncInterval = null;
 let networkLatency = 0;
 
 // ==================== 创建房间（主机） ====================
@@ -71,6 +72,9 @@ function joinRoom() {
         showConnectionStatus('网络库加载中，请稍后重试...', 'error');
         return;
     }
+    
+    // 明确设置为访客
+    isHost = false;
     
     const nameInput = document.getElementById('guestName');
     const codeInput = document.getElementById('joinCode');
@@ -307,11 +311,19 @@ function applyRemoteGameState(state) {
         // 房主发送的状态 -> 更新 player1（如果我是访客）
         if (!isHost) {
             targetPlayer = player1;
+            console.log(`[访客] 收到房主状态，更新 player1，血量: ${state.player.health}`);
+        } else {
+            console.log(`[房主] 忽略自己的状态`);
+            return; // 房主忽略自己的状态
         }
     } else if (state.sender === 'guest') {
         // 访客发送的状态 -> 更新 player2（如果我是房主）
         if (isHost) {
             targetPlayer = player2;
+            console.log(`[房主] 收到访客状态，更新 player2，血量: ${state.player.health}`);
+        } else {
+            console.log(`[访客] 忽略自己的状态`);
+            return; // 访客忽略自己的状态
         }
     }
     
@@ -403,6 +415,11 @@ function cancelConnection() {
 function resetConnection() {
     stopPingTest();
     
+    if (syncInterval) {
+        clearInterval(syncInterval);
+        syncInterval = null;
+    }
+    
     if (connection) {
         connection.close();
         connection = null;
@@ -465,8 +482,9 @@ function startOnlineGame() {
     
     updateUI();
     
-    // 开始状态同步
-    setInterval(syncGameState, 1000 / 30);
+    // 开始状态同步（保存引用以便清理）
+    if (syncInterval) clearInterval(syncInterval);
+    syncInterval = setInterval(syncGameState, 1000 / 30);
 }
 
 // ==================== 更新玩家名称 ====================

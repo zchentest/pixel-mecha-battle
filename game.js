@@ -806,7 +806,7 @@ function selectMode(mode) {
         currentStage = 0;
         showStageInfo();
     } else {
-        document.getElementById('p2Controls').style.display = 'block';
+        document.getElementById('p2ControlSection').style.display = 'block';
         startGame();
     }
 }
@@ -825,7 +825,7 @@ function startStage() {
     document.getElementById('stageInfo').style.display = 'none';
     document.getElementById('stageIndicator').style.display = 'block';
     document.getElementById('currentStage').textContent = currentStage + 1;
-    document.getElementById('p2Controls').style.display = 'none';
+    document.getElementById('p2ControlSection').style.display = 'none';
     startGame();
 }
 
